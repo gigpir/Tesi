@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="subset_artist_term" uuid="6f897ba1-5213-4fc5-8247-0638ad41643d">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/millionsongsubset_full/MillionSongSubset/AdditionalFiles/subset_artist_term.db</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="subset_artist_similarity" uuid="f0f1c020-9db0-49f7-8bf4-4187b235e47d">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/millionsongsubset_full/MillionSongSubset/AdditionalFiles/subset_artist_similarity.db</jdbc-url>
+    </data-source>
+  </component>
+</project>
