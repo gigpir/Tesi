@@ -40,7 +40,7 @@ def increase_vector_size(vect,final_size):
     return final_vect
 
 
-def resize_matrix(matrix, row):
+def resize_matrix(matrix, row, gradient=0):
     # reduce or increase the number of rows of matrix in order
     # to achieve dimension specified by row
 
@@ -51,7 +51,17 @@ def resize_matrix(matrix, row):
 
     for i in range(matrix.shape[1]):
         #extract and transpose the corresponding coloumn vector
-        new_vect = resize_vect(matrix[:,i],row)
+
+        if gradient == 0:
+            grad = matrix[:,i]
+        elif gradient == 1:
+            grad = np.gradient(matrix[:, i])
+        elif gradient == 2:
+            grad = np.gradient(matrix[:, i])
+            grad = np.gradient(grad)
+
+
+        new_vect = resize_vect(grad,row)
         if i == 0:
             final = new_vect
         else:

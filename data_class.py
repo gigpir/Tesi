@@ -35,7 +35,7 @@ class Song:
     def __str__(self):
         return str(self.name)
 class Artist:
-    def __init__(self, name, id ):
+    def __init__(self, name, id):
         self.name = name
         self.id = id
         self.terms = []

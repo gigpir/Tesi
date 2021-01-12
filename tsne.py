@@ -15,7 +15,7 @@ def tsne(X, n_comp = 2):
 def tsne_plot_centroids(centroids,filename='tsne_centroids'):
     fig = plt.figure()
     y = np.array(centroids)[:, 0]
-    X = np.array(centroids)[:, 1:]
+    X = np.array(centroids)[:, 1:6]
     X = X.astype(np.float)
     new_y = []
     ax = fig.add_subplot(1, 1, 1)
@@ -29,15 +29,17 @@ def tsne_plot_centroids(centroids,filename='tsne_centroids'):
     ax.scatter(X[:, 0], X[:, 1], c=new_y, sizes=(sizes*200))
     ax.set_title('TSNE-centroids')
     pad = 20
-    ax.set_xlim([min(X[:, 0])-pad, max(X[:, 0])+pad])
+    #ax.set_xlim([min(X[:, 0])-pad, max(X[:, 0])+pad])
+    ax.set_xlim([-50, 60])
     ax.set_xlabel('tsne-1')
-    ax.set_ylim([min(X[:, 1])-pad, max(X[:, 1])+pad])
+    #ax.set_ylim([min(X[:, 1])-pad, max(X[:, 1])+pad])
+    ax.set_ylim([-50, 60])
     ax.set_ylabel('tsne-2')
     for i, txt in enumerate(vect):
-        ax.annotate(txt, (X[i, 0], X[i, 1]))
+        ax.annotate(np.array(centroids)[i, 6], (X[i, 0], X[i, 1]))
     fname = './plots/'+filename+'.png'
     plt.savefig(fname, dpi=600)
-def tsne_plot(X,y,n_comp = 2, genre_annot=False):
+def tsne_plot(X,y,n_comp = 2, genre_annot=False,note=''):
     fig = plt.figure()
     y = np.array(y)
     new_y = []
@@ -63,9 +65,11 @@ def tsne_plot(X,y,n_comp = 2, genre_annot=False):
         ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=new_y, s=10)
 
     ax.set_title('TSNE-space plot')
-    ax.set_xlim([min(X[:, 0]), max(X[:, 0])])
+    #ax.set_xlim([min(X[:, 0]), max(X[:, 0])])
+    ax.set_xlim([-50, 60])
     ax.set_xlabel('tsne-1')
-    ax.set_ylim([min(X[:, 1]), max(X[:, 1])])
+    #ax.set_ylim([min(X[:, 1]), max(X[:, 1])])
+    ax.set_ylim([-50, 60])
     ax.set_ylabel('tsne-2')
     if n_comp == 3:
         ax.set_zlim([min(X[:, 2]), max(X[:, 2])])
@@ -74,9 +78,9 @@ def tsne_plot(X,y,n_comp = 2, genre_annot=False):
         for i, txt in enumerate(vect):
             if i % 100 == 0:
                 ax.annotate(txt, (X[i, 0], X[i, 1]))
-        fname = './plots/tsne_'+str(n_comp)+'_genre.png'
+        fname = './plots/tsne_'+str(n_comp)+note+'_genre.png'
     else:
-        fname = './plots/tsne_' + str(n_comp) + '.png'
+        fname = './plots/tsne_' + str(n_comp) +note+ '.png'
 
     plt.savefig(fname, dpi=600)
 
@@ -114,6 +118,13 @@ def prepare_dataset(artists):
             pitch_mat = s.segments_pitches
             feat_row = np.append(resize_matrix(mfcc_mat, rows), resize_matrix(pitch_mat, rows))
             feat_row = np.append(feat_row, [s.tempo, s.loudness])
+
+            #append first and second derivative
+            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
+            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
+            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
+            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
+
             X.append(feat_row)
             lab_row = [a.id, s.id]
 
@@ -156,22 +167,25 @@ def filter_by_songlist_lenght(artists, max_artists_num=100, min_lenght = 10):
 def get_centroids(X,y):
 
     out = [] # [<A.ID><A.C1><A.C2><v11><v22><v12>]
-
     #get unique artist ids
     artist_ids = set(np.array(y)[:, 0])
 
     #aggregate horizontally X and y to filter
-    X_y = np.hstack((X,y))
+    X_y = np.hstack((X, y))
 
     for id in artist_ids:
         #filter only coordinates related to that id
         filtered_x = X_y[np.where(X_y[:, 2] == id)][:, :2].astype(np.float)
-
+        #filtered_x = df.loc[['artist_id'] == id]
+        genre = X_y[np.where(X_y[:, 2] == id)][0, 4]
         # calc centroid on that artist
         c1 = np.mean(filtered_x[:, 0])
         c2 = np.mean(filtered_x[:, 1])
         var = np.cov(filtered_x[:, 0], filtered_x[:, 1])
-        out.append([id, c1, c2, var[0][0], var[1][1], var[0][1]])
+        out.append([id, c1, c2, var[0][0], var[1][1], var[0][1], genre])
+
+    out = pd.DataFrame(data=out, columns=["artist_id", "a_cen1", "a_cen2", "a_var11", "a_var22", "a_var12", "first_gen"])
+    out = out.astype({'a_cen1': np.float, 'a_cen2': np.float, 'a_var11': np.float, 'a_var22': np.float, 'a_var12': np.float})
 
     return out
 def remove_outliers(X_tsne,y, n_sigma=2):
@@ -228,37 +242,33 @@ def create_dataframe_tsne(X,y):
 
     columns = ['tsne_1','tsne_2']
     data = pd.DataFrame(data=X, columns=columns)
-    data['artist_id']= y[0]
-    data['song_id'] = y[1]
-    data['first_gen'] = y[2]
+    data['artist_id']= np.array(y)[:,0]
+    data['song_id'] = np.array(y)[:,1]
+    data['first_gen'] = np.array(y)[:,2]
 
-    data = data.astype({'tsne_1': np.float, 'tsne_2': np.float})
+    #data = data.astype({'tsne_1': np.float, 'tsne_2': np.float})
     return data
 
 
 
 def main():
 
-    artists = load_data(filename='full_msd_top10000.pkl')
+    artists = load_data(filename='full_msd_top20000.pkl')
     artists = filter_by_songlist_lenght(artists=artists, max_artists_num=10, min_lenght=0)
     X, y = prepare_dataset(artists)
     X_tsne = tsne(X,n_comp=2)
-    df_tsne = create_dataframe_tsne(X_tsne, y)
 
     centroids = get_centroids(X_tsne, y)
-    tsne_plot_centroids(centroids=centroids,filename='centroids')
-    #X_tsne,y = remove_outliers(X_tsne,y)
-    #centroids = get_centroids(X_tsne, y)
-    #tsne_plot_centroids(centroids=centroids, filename='centroids_wo_outliers')
+    tsne_plot_centroids(centroids=centroids,filename='centroids_with_outliers')
+    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_with_outliers')
 
-    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True)
-    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True)
-    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=False)
-    '''X_tsne = tsne(X, n_comp=3)
-    tsne_plot(X=X_tsne, y=y, n_comp=3, genre_annot=False)'''
+    X_tsne,y = remove_outliers(X_tsne,y)
 
-    return X_tsne, y, centroids
+    centroids = get_centroids(X_tsne, y)
+    tsne_plot_centroids(centroids=centroids, filename='centroids_wo_outliers')
+    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_wo_outliers')
+
 
 
 if __name__ == '__main__':
-    X_tsne,y, centroids= main()
+    main()
