@@ -40,7 +40,7 @@ def increase_vector_size(vect,final_size):
     return final_vect
 
 
-def resize_matrix(matrix, row, gradient=0):
+def resize_matrix(matrix, row, gradient=0, min_max_var=False):
     # reduce or increase the number of rows of matrix in order
     # to achieve dimension specified by row
 
@@ -50,22 +50,35 @@ def resize_matrix(matrix, row, gradient=0):
         resize_vect = increase_vector_size
 
     for i in range(matrix.shape[1]):
-        #extract and transpose the corresponding coloumn vector
+        if min_max_var:
+            # extract min max and variance of coloumn vector
+            if i == 0:
+                final = []
+            current_v = matrix[:,i]
 
-        if gradient == 0:
-            grad = matrix[:,i]
-        elif gradient == 1:
-            grad = np.gradient(matrix[:, i])
-        elif gradient == 2:
-            grad = np.gradient(matrix[:, i])
-            grad = np.gradient(grad)
+            min = np.min(current_v)
+            max = np.max(current_v)
+            var = np.var(current_v)
+            final = np.append(final, min)
+            final = np.append(final, max)
+            final = np.append(final, var)
 
-
-        new_vect = resize_vect(grad,row)
-        if i == 0:
-            final = new_vect
         else:
-            final = np.append(final,new_vect)
+            #extract and transpose the corresponding coloumn vector
+            if gradient == 0:
+                grad = matrix[:,i]
+            elif gradient == 1:
+                grad = np.gradient(matrix[:, i])
+            elif gradient == 2:
+                grad = np.gradient(matrix[:, i])
+                grad = np.gradient(grad)
+
+
+            new_vect = resize_vect(grad,row)
+            if i == 0:
+                final = new_vect
+            else:
+                final = np.append(final,new_vect)
     return final
 
 

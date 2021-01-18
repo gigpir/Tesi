@@ -6,8 +6,9 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import pandas as pd
 from utility import resize_matrix, z_normalize
-
-
+from ellipses_plot_wrapper import confidence_ellipse
+from termcolor import colored
+import matplotlib._color_data as mcd
 def tsne(X, n_comp = 2):
     X_embedded = TSNE(n_components=n_comp, init = 'pca',random_state=12).fit_transform(X)
     #manifold.TSNE(n_components=n_components, init='pca',random_state=0)
@@ -39,6 +40,43 @@ def tsne_plot_centroids(centroids,filename='tsne_centroids'):
         ax.annotate(np.array(centroids)[i, 6], (X[i, 0], X[i, 1]))
     fname = './plots/'+filename+'.png'
     plt.savefig(fname, dpi=600)
+
+def tsne_plot_elliptical(X,y,artists,filename='tsne_centroids',note='with outliers'):
+    fig, ax_nstd = plt.subplots(figsize=(6, 6))
+
+    out = []  # [<A.ID><A.C1><A.C2><v11><v22><v12>]
+    # get unique artist ids
+    artist_ids = set(np.array(y)[:, 0])
+
+    # aggregate horizontally X and y to filter
+    X_y = np.hstack((X, y))
+
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
+    for i, id in enumerate(artist_ids):
+        # filter only coordinates related to that id
+        filtered_x = X_y[np.where(X_y[:, 2] == id)][:, :2].astype(np.float)
+
+        x = filtered_x[:, 0]
+        y = filtered_x[:, 1]
+        ax_nstd.scatter(x, y, s=0.5, c=colors[i])
+        confidence_ellipse(x, y, ax_nstd, n_std=1, label=r'$1\sigma$', edgecolor=colors[i])
+        ax_nstd.scatter(np.mean(x), np.mean(y), c=colors[i], s=3)
+        ax_nstd.annotate(artists[id].name, (np.mean(x), np.mean(y)),color=colors[i])
+
+    fname = './plots/'+ filename+ '.png'
+    ax_nstd.set_title('TSNE-space centroids '+note)
+    # ax.set_xlim([min(X[:, 0]), max(X[:, 0])])
+    ax_nstd.set_xlim([-50, 60])
+    ax_nstd.set_xlabel('tsne-1')
+    # ax.set_ylim([min(X[:, 1]), max(X[:, 1])])
+    ax_nstd.set_ylim([-50, 60])
+    ax_nstd.set_ylabel('tsne-2')
+    ax_nstd.legend()
+    plt.savefig(fname, dpi=600)
+
+
+
 def tsne_plot(X,y,n_comp = 2, genre_annot=False,note=''):
     fig = plt.figure()
     y = np.array(y)
@@ -119,11 +157,15 @@ def prepare_dataset(artists):
             feat_row = np.append(resize_matrix(mfcc_mat, rows), resize_matrix(pitch_mat, rows))
             feat_row = np.append(feat_row, [s.tempo, s.loudness])
 
-            #append first and second derivative
-            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
-            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
-            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
-            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
+            #append first  derivative
+            feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
+            feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
+            # append second derivative
+            feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
+            feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
+            #append min, max, variance of each coloumn
+            feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, min_max_var=True))
+            feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, min_max_var=True))
 
             X.append(feat_row)
             lab_row = [a.id, s.id]
@@ -221,7 +263,7 @@ def remove_outliers(X_tsne,y, n_sigma=2):
         z_mean_distances = (mean_distances[:, 1].astype(np.float) - mean_distances[:, 1].astype(np.float).mean()) / (mean_distances[:, 1].astype(np.float).std())
         for i, song_dist in enumerate(mean_distances):
             #leave about 95 percent in
-            if z_mean_distances[i] > n_sigma or z_mean_distances[i] < -n_sigma:
+            if z_mean_distances[i] > n_sigma:
                 black_list.append(song_dist[0])
 
     X = []
@@ -249,7 +291,37 @@ def create_dataframe_tsne(X,y):
     #data = data.astype({'tsne_1': np.float, 'tsne_2': np.float})
     return data
 
+def compare_centroids_and_similar_artists(X_tsne, y, artists):
+    centroids = get_centroids(X_tsne, y)
 
+    distances = dict()
+    for index1, outer in centroids.iterrows():
+        # for each artist centroid calc the distance btw other centroids
+        distances[outer['artist_id']] = []
+        for index1, inner in centroids.iterrows():
+            if outer['artist_id'] != inner['artist_id']:
+                d = np.sqrt((outer['a_cen1']-inner['a_cen1'])**2+(outer['a_cen2']-inner['a_cen2'])**2)
+                distances[outer['artist_id']].append([inner['artist_id'],d])
+
+    #sort by ascending distance
+    for key,val in distances.items():
+        distances[key].sort(key=lambda tup: tup[1])
+
+        #print(colored(distances[key],'green'))
+
+        ground_t = artists[key].similar_artists
+        new_gt=[]
+        # consider only the artist present in our sample
+        for id in ground_t:
+            if id in distances:
+                new_gt.append(id)
+
+        print(artists[key].name, '')
+        for i, my_list in enumerate(distances[key]):
+            if len(new_gt)>i:
+                print('\t\t', artists[my_list[0]].name,' --- ',artists[new_gt[i]].name)
+            else:
+                print('\t\t', artists[my_list[0]].name)
 
 def main():
 
@@ -258,15 +330,20 @@ def main():
     X, y = prepare_dataset(artists)
     X_tsne = tsne(X,n_comp=2)
 
-    centroids = get_centroids(X_tsne, y)
-    tsne_plot_centroids(centroids=centroids,filename='centroids_with_outliers')
-    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_with_outliers')
+    #centroids = get_centroids(X_tsne, y)
+    #tsne_plot_centroids(centroids=centroids,filename='centroids_with_outliers')
+    #tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_with_outliers')
+    tsne_plot_elliptical(X_tsne,y,artists,filename='centroids_w_o',note='with outliers')
 
     X_tsne,y = remove_outliers(X_tsne,y)
 
-    centroids = get_centroids(X_tsne, y)
-    tsne_plot_centroids(centroids=centroids, filename='centroids_wo_outliers')
-    tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_wo_outliers')
+    tsne_plot_elliptical(X_tsne, y, artists, filename='centroids_wo_o',note='without outliers')
+    compare_centroids_and_similar_artists(X_tsne, y, artists)
+    #centroids = get_centroids(X_tsne, y)
+    #tsne_plot_centroids(centroids=centroids, filename='centroids_wo_outliers')
+    #tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_wo_outliers')
+
+
 
 
 
