@@ -1,0 +1,205 @@
+4 mean + min max var + first derivative + second derivative
+
+Before Feature selection  (1921, 146)
+After Feature selection  (1921, 69)
+
+Prefix Legend:
+A no feature selection
+B feature selection
+
+------------compare_centroids_and_similar_artists WITH outliers, NO feature selection------------
+Michael Jackson  ( 2  occurrences )
+		 Beastie Boys  ---  Diana Ross & The Supremes
+		 Diana Ross & The Supremes  ---  Ike & Tina Turner
+		 Ike & Tina Turner
+		 Bob Marley
+		 Joan Baez
+		 Johnny Cash
+		 Willie Nelson
+		 Duran Duran
+		 Jimi Hendrix
+Joan Baez  ( 0  occurrences )
+Bob Marley  ( 0  occurrences )
+Beastie Boys  ( 0  occurrences )
+Ike & Tina Turner  ( 0  occurrences )
+Duran Duran  ( 0  occurrences )
+Diana Ross & The Supremes  ( 2  occurrences )
+		 Ike & Tina Turner  ---  Michael Jackson
+		 Johnny Cash  ---  Ike & Tina Turner
+		 Beastie Boys
+		 Michael Jackson
+		 Joan Baez
+		 Willie Nelson
+		 Jimi Hendrix
+		 Duran Duran
+		 Bob Marley
+Jimi Hendrix  ( 0  occurrences )
+Willie Nelson  ( 1  occurrences )
+		 Duran Duran  ---  Johnny Cash
+		 Ike & Tina Turner
+		 Johnny Cash
+		 Diana Ross & The Supremes
+		 Beastie Boys
+		 Joan Baez
+		 Michael Jackson
+		 Jimi Hendrix
+		 Bob Marley
+Johnny Cash  ( 1  occurrences )
+		 Joan Baez  ---  Willie Nelson
+		 Ike & Tina Turner
+		 Diana Ross & The Supremes
+		 Jimi Hendrix
+		 Willie Nelson
+		 Duran Duran
+		 Beastie Boys
+		 Michael Jackson
+		 Bob Marley
+
+Outlier remotion: (1921 - 92)= 1829 
+------------compare_centroids_and_similar_artists WITHOUT outliers, NO feature selection------------
+Michael Jackson  ( 2  occurrences )
+		 Beastie Boys  ---  Diana Ross & The Supremes
+		 Diana Ross & The Supremes  ---  Ike & Tina Turner
+		 Ike & Tina Turner
+		 Bob Marley
+		 Joan Baez
+		 Johnny Cash
+		 Willie Nelson
+		 Duran Duran
+		 Jimi Hendrix
+Joan Baez  ( 0  occurrences )
+Bob Marley  ( 0  occurrences )
+Beastie Boys  ( 0  occurrences )
+Ike & Tina Turner  ( 0  occurrences )
+Duran Duran  ( 0  occurrences )
+Diana Ross & The Supremes  ( 2  occurrences )
+		 Ike & Tina Turner  ---  Michael Jackson
+		 Johnny Cash  ---  Ike & Tina Turner
+		 Michael Jackson
+		 Beastie Boys
+		 Joan Baez
+		 Willie Nelson
+		 Jimi Hendrix
+		 Duran Duran
+		 Bob Marley
+Jimi Hendrix  ( 0  occurrences )
+Willie Nelson  ( 1  occurrences )
+		 Duran Duran  ---  Johnny Cash
+		 Ike & Tina Turner
+		 Johnny Cash
+		 Diana Ross & The Supremes
+		 Joan Baez
+		 Beastie Boys
+		 Michael Jackson
+		 Jimi Hendrix
+		 Bob Marley
+Johnny Cash  ( 1  occurrences )
+		 Joan Baez  ---  Willie Nelson
+		 Ike & Tina Turner
+		 Diana Ross & The Supremes
+		 Jimi Hendrix
+		 Willie Nelson
+		 Duran Duran
+		 Michael Jackson
+		 Beastie Boys
+		 Bob Marley
+
+
+		 
+------------compare_centroids_and_similar_artists WITH outliers, YES feature selection------------
+Bob Marley  ( 0  occurrences )
+Duran Duran  ( 0  occurrences )
+Ike & Tina Turner  ( 0  occurrences )
+Johnny Cash  ( 1  occurrences )
+		 Willie Nelson  ---  Willie Nelson
+		 Joan Baez
+		 Diana Ross & The Supremes
+		 Ike & Tina Turner
+		 Michael Jackson
+		 Beastie Boys
+		 Duran Duran
+		 Jimi Hendrix
+		 Bob Marley
+Diana Ross & The Supremes  ( 2  occurrences )
+		 Ike & Tina Turner  ---  Michael Jackson
+		 Michael Jackson  ---  Ike & Tina Turner
+		 Beastie Boys
+		 Duran Duran
+		 Joan Baez
+		 Jimi Hendrix
+		 Johnny Cash
+		 Willie Nelson
+		 Bob Marley
+Michael Jackson  ( 2  occurrences )
+		 Ike & Tina Turner  ---  Diana Ross & The Supremes
+		 Beastie Boys  ---  Ike & Tina Turner
+		 Diana Ross & The Supremes
+		 Joan Baez
+		 Duran Duran
+		 Jimi Hendrix
+		 Willie Nelson
+		 Bob Marley
+		 Johnny Cash
+Beastie Boys  ( 0  occurrences )
+Joan Baez  ( 0  occurrences )
+Willie Nelson  ( 1  occurrences )
+		 Joan Baez  ---  Johnny Cash
+		 Johnny Cash
+		 Diana Ross & The Supremes
+		 Ike & Tina Turner
+		 Michael Jackson
+		 Beastie Boys
+		 Bob Marley
+		 Duran Duran
+		 Jimi Hendrix
+Jimi Hendrix  ( 0  occurrences )
+
+Outlier remotion: (1921 - 123)= 1798 
+------------compare_centroids_and_similar_artists WITHOUT outliers, YES feature selection------------
+
+Bob Marley  ( 0  occurrences )
+Duran Duran  ( 0  occurrences )
+Ike & Tina Turner  ( 0  occurrences )
+Johnny Cash  ( 1  occurrences )
+		 Willie Nelson  ---  Willie Nelson
+		 Joan Baez
+		 Diana Ross & The Supremes
+		 Ike & Tina Turner
+		 Michael Jackson
+		 Beastie Boys
+		 Duran Duran
+		 Jimi Hendrix
+		 Bob Marley
+Diana Ross & The Supremes  ( 2  occurrences )
+		 Ike & Tina Turner  ---  Michael Jackson
+		 Michael Jackson  ---  Ike & Tina Turner
+		 Duran Duran
+		 Jimi Hendrix
+		 Beastie Boys
+		 Joan Baez
+		 Johnny Cash
+		 Willie Nelson
+		 Bob Marley
+Michael Jackson  ( 2  occurrences )
+		 Ike & Tina Turner  ---  Diana Ross & The Supremes
+		 Beastie Boys  ---  Ike & Tina Turner
+		 Diana Ross & The Supremes
+		 Duran Duran
+		 Jimi Hendrix
+		 Joan Baez
+		 Bob Marley
+		 Willie Nelson
+		 Johnny Cash
+Beastie Boys  ( 0  occurrences )
+Joan Baez  ( 0  occurrences )
+Willie Nelson  ( 1  occurrences )
+		 Joan Baez  ---  Johnny Cash
+		 Johnny Cash
+		 Ike & Tina Turner
+		 Diana Ross & The Supremes
+		 Michael Jackson
+		 Beastie Boys
+		 Bob Marley
+		 Duran Duran
+		 Jimi Hendrix
+Jimi Hendrix  ( 0  occurrences )

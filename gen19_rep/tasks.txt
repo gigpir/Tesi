@@ -1,0 +1,19 @@
+1 Aggiungere minimo massimo e varianza () -->  OK
+
+2 Sistemare esclusione outliers  --> Working
+
+3 Sistemare raggio grafico centroidi  --> OK unico grafico con punti ed ellissi
+
+4 feature selection --> OK with VarianceThreshold .9* (1 - .9)
+
+5 Calcolare distanza euclidea sui centroidi degli artisti e confrontarla con il vettore di artisti simili -->  OK, 
+	stampa il vettore ordinato e lo affianca alle eventuali occorrenze (anche esse ordinate) del vettore similar_artists
+	
+Folders legend:	
+1 mean values
+2 mean + min max var 
+3 mean + min max var + first derivative
+4 mean + min max var + first derivative + second derivative
+
+
+	
