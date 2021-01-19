@@ -16,4 +16,11 @@ Folders legend:
 4 mean + min max var + first derivative + second derivative
 
 
+TODO
+-- feature selection 
+-- cambiare 'init' in tsne
+-- provare differenti tipi di normalizzazione 
+-- rimozione outlier
+-- aggiungere artisti in base al vettore artisti simili + numero di brani presenti
+
 	

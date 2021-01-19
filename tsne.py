@@ -165,11 +165,11 @@ def prepare_dataset(artists):
             feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, min_max_var=True))
             feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, min_max_var=True))
             # append first  derivative
-            feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
-            feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
+            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
+            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
             # append second derivative
-            feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
-            feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
+            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
+            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
 
 
             X.append(feat_row)
@@ -182,7 +182,7 @@ def prepare_dataset(artists):
                 lab_row.append('NULL')
             y.append(lab_row)
         pbar.update()
-    X = feature_selection(np.array(X).astype(np.float))
+    #X = feature_selection(np.array(X).astype(np.float))
     X = z_normalize(X)
     return X, y
 
