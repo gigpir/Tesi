@@ -1,6 +1,7 @@
 import numpy as np
+from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.preprocessing import PowerTransformer
 
 def decrease_vector_size(vect,final_size):
     # Decrease array size by averaging adjacent values with numpy
@@ -84,3 +85,23 @@ def resize_matrix(matrix, row, gradient=0, min_max_var=False):
 
 def z_normalize(data):
     return StandardScaler().fit(data).transform(data)
+
+def power_transform(data):
+    pt = PowerTransformer( standardize=False)
+    return pt.fit_transform(data)
+
+def normalize(data):
+    #Normalization is the process of scaling individual samples to have unit norm.
+    # This process can be useful if you plan to use a quadratic form such as the
+    # dot-product or any other kernel to quantify the similarity of any pair of samples.
+    return preprocessing.normalize(data, norm='l2')
+def quantile_transform(data):
+    #QuantileTransformer provides a non-parametric
+    # transformation to map the data to a uniform distribution with values between 0 and 1
+    quantile_transformer = preprocessing.QuantileTransformer(output_distribution='normal',random_state=0)
+    return quantile_transformer.fit_transform(data)
+
+def robust_scaler(data):
+    #Scale features using statistics that are robust to outliers
+
+    return preprocessing.RobustScaler(quantile_range=[15,85]).fit_transform(data)

@@ -18,8 +18,12 @@ Folders legend:
 
 TODO
 -- feature selection 
--- cambiare 'init' in tsne
--- provare differenti tipi di normalizzazione 
+-- cambiare 'init' in tsne OK, "random" è meglio di 'pca'
+-- provare differenti tipi di normalizzazione -> Normalize -> non va bene
+	PowerTransform‘yeo-johnson’ -> non va bene
+	Quantile Transform normal-> da considerare
+	Robust scaler -> interessante con quantile_range [15,85] o [10,90]
+	
 -- rimozione outlier
 -- aggiungere artisti in base al vettore artisti simili + numero di brani presenti
 

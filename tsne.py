@@ -5,16 +5,17 @@ import multiprocessing
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import pandas as pd
-from utility import resize_matrix, z_normalize
+from utility import resize_matrix, z_normalize, power_transform, normalize, quantile_transform, robust_scaler
 from ellipses_plot_wrapper import confidence_ellipse
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
+from sklearn.svm import SVC
+from sklearn.model_selection import StratifiedKFold
+from sklearn.feature_selection import RFECV
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.datasets import make_classification
 from termcolor import colored
 import matplotlib._color_data as mcd
-from sklearn.covariance import EllipticEnvelope
 def tsne(X, n_comp = 2):
-    X_embedded = TSNE(n_components=n_comp, init = 'pca',random_state=12).fit_transform(X)
+    X_embedded = TSNE(n_components=n_comp,learning_rate=400,n_jobs=-1,random_state=12).fit_transform(X)# init = 'pca',
     #manifold.TSNE(n_components=n_components, init='pca',random_state=0)
     return X_embedded
 def tsne_plot_centroids(centroids,filename='tsne_centroids'):
@@ -142,7 +143,7 @@ def mean_n_rows(artists):
     return mean
 
 
-def prepare_dataset(artists):
+def prepare_dataset(artists,remove_outliers=False,):
 
     #normalize dimensions of mfcc matrix by decreasing or increasing feature space
     # normalize dimensions of pitches matrix by decreasing or increasing feature space
@@ -182,8 +183,14 @@ def prepare_dataset(artists):
                 lab_row.append('NULL')
             y.append(lab_row)
         pbar.update()
-    #X = feature_selection(np.array(X).astype(np.float))
-    X = z_normalize(X)
+    #X = feature_selection(np.array(X).astype(np.float),np.array(y)[:,0])
+    #X = z_normalize(X)
+    #X = power_transform(X)
+    #X = quantile_transform(X)
+    X = robust_scaler(X)
+    if remove_outliers:
+        X ,y = remove_outliers_lof(X,y)
+
     return X, y
 
 def str_vect_to_dict(vect):
@@ -287,6 +294,48 @@ def remove_outliers_znorm(X_tsne, y, n_sigma=2):
 
     return X,y
 
+
+def remove_outliers_lof(data, y):
+    #Unsupervised Outlier Detection using Local Outlier Factor (LOF)
+    out = []  # same format as X_tsne
+
+    # get unique artist ids
+    artist_ids = set(np.array(y)[:, 0])
+
+    # aggregate horizontally X and y to filter
+    X_y = np.hstack((data, y))
+
+    black_list = []
+
+    for id in artist_ids:
+        # filter only coordinates related to that id
+        filtered = X_y[np.where(X_y[:, -3] == id)]
+        y = filtered[:, -3:]
+        X = np.delete(filtered,np.s_[-3:],axis=1).astype(np.float)
+
+        clf = LocalOutlierFactor(n_neighbors=10)
+        pr = clf.fit_predict(X)
+        for i, p in enumerate(pr):
+            #if p == -1 we have an outlier
+            if p == -1:
+                black_list.append(y[i][1])
+    X = []
+    y = []
+    for r in X_y:
+        if r[-2] not in black_list:
+            X.append(list(r[:-3]))
+            y.append(list(r[-3:]))
+
+    X = np.array(X).astype(np.float)
+    y = np.array(y)
+    #print("Outlier remotion: (%d - %d)= %d " % (X_y.shape[0], X_y.shape[0]-X.shape[0], X.shape[0]))
+    print("Before Outlier remotion: ", data.shape)
+    print("Before Outlier remotion: ", X.shape)
+
+    return X,y
+
+
+
 def create_dataframe_tsne(X,y):
 
     columns = ['tsne_1','tsne_2']
@@ -331,11 +380,29 @@ def compare_centroids_and_similar_artists(X_tsne, y, artists):
                 else:
                     print('\t\t', artists[my_list[0]].name)
 
-def feature_selection(X):
+def feature_selection(X,y):
     print('Before Feature selection ',X.shape)
-    #Removing features with low variance
-    #trheshold Var[X] = p(1-p)
-    X_new = VarianceThreshold(threshold=(.9 * (1 - .9))).fit_transform(X)
+    # Create the RFE object and compute a cross-validated score.
+    svc = SVC(kernel="linear")
+    # The "accuracy" scoring is proportional to the number of correct
+    # classifications
+    min_features_to_select = 40  # Minimum number of features to consider
+    rfecv = RFECV(estimator=svc, step=1, cv=StratifiedKFold(2),
+                  scoring='accuracy',
+                  min_features_to_select=min_features_to_select,
+                  n_jobs=4,
+                  verbose=True)
+    X_new = rfecv.fit_transform(X, y)
+    print("Optimal number of features : %d" % rfecv.n_features_)
+
+    # Plot number of features VS. cross-validation scores
+    plt.figure()
+    plt.xlabel("Number of features selected")
+    plt.ylabel("Cross validation score (nb of correct classifications)")
+    plt.plot(range(min_features_to_select,
+                   len(rfecv.grid_scores_) + min_features_to_select),
+             rfecv.grid_scores_)
+    plt.show()
     print('After Feature selection ', X_new.shape)
 
     return X_new
@@ -344,22 +411,17 @@ def main():
 
     artists = load_data(filename='full_msd_top20000.pkl')
     artists = filter_by_songlist_lenght(artists=artists, max_artists_num=10, min_lenght=0)
+
     X, y = prepare_dataset(artists)
-
     X_tsne = tsne(X,n_comp=2)
+    tsne_plot_elliptical(X_tsne,y,artists,filename='centroids_',note='with outliers')
 
-    #centroids = get_centroids(X_tsne, y)
-    #tsne_plot_centroids(centroids=centroids,filename='centroids_with_outliers')
-    #tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_with_outliers')
-    tsne_plot_elliptical(X_tsne,y,artists,filename='centroids_with_outliers',note='with outliers')
     compare_centroids_and_similar_artists(X_tsne, y, artists)
-    X_tsne,y = remove_outliers_znorm(X_tsne,y)
 
-    tsne_plot_elliptical(X_tsne, y, artists, filename='centroids_without_outliers',note='without outliers')
+    X, y = prepare_dataset(artists,remove_outliers=True)
+    X_tsne = tsne(X, n_comp=2)
+    tsne_plot_elliptical(X_tsne, y, artists, filename='centroids_',note='without outliers')
     compare_centroids_and_similar_artists(X_tsne, y, artists)
-    #centroids = get_centroids(X_tsne, y)
-    #tsne_plot_centroids(centroids=centroids, filename='centroids_wo_outliers')
-    #tsne_plot(X=X_tsne, y=y, n_comp=2, genre_annot=True, note='_wo_outliers')
 
 
 
