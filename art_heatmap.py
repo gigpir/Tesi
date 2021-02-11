@@ -74,9 +74,9 @@ def optimize_artists_dictionary(artists):
     return artists
 
 def attach_tsne_to_art_dict(artists, X,y):
-    pbar = tqdm(total=len(y))
-    print("Attaching tsne coordinates to artist dictionary")
 
+    print("Attaching tsne coordinates to artist dictionary")
+    pbar = tqdm(total=len(y))
     for i, row_label in enumerate(y):
         artists[row_label[0]].song_list[row_label[1]].tsne = [X[i][0],X[i][1]]
         pbar.update()
@@ -117,32 +117,6 @@ def plot_heatmaps(artists,dimension, min, max):
         im, cbar = heatmap(a.tsne_heatmap, range, range, ax=ax,
                            cmap="viridis", cbarlabel="songs concentration")
 
-
-
-
-
-
-
-
-
-
-
-
-        # We want to show all ticks...
-        #ax.set_xticks(np.arange(dimension))
-        #ax.set_yticks(np.arange(dimension))
-        # ... and label them with the respective list entries
-        #ax.set_xticklabels(farmers)
-        #ax.set_yticklabels(vegetables)
-
-        # Rotate the tick labels and set their alignment.
-        #plt.setp(ax.get_xticklabels(), rotation=45, ha="right",rotation_mode="anchor")
-
-        # Loop over data dimensions and create text annotations.
-        #for i in range(len(vegetables)):
-        #    for j in range(len(farmers)):
-        #        text = ax.text(j, i, harvest[i, j],
-        #                       ha="center", va="center", color="w")
         title = "TSNE Heatmap for "+ a.name
         filename ='./Heatmaps/'+a.id
         ax.set_title(title)
@@ -165,6 +139,9 @@ def compute_heatmap_distance(h1,h2,dimension,metric):
                 total_div += div
             if metric == 'not_intersection_11':
                 d = min(h1[i][j],h2[i][j])
+                total_d += d
+            if metric == 'kullback-leibler_37':
+                d = h1[i][j] * np.log(h1[i][j]/h2[i][j])
                 total_d += d
 
     if metric == 'soergel_7':
@@ -193,7 +170,7 @@ def compute_distances(artists, dimension = 20 ,metric='minkowski_2'):
 
 def main():
     artists = load_data(filename='full_msd_top20000.pkl')
-    artists = tsne.filter_by_songlist_lenght(artists=artists, max_artists_num=20, min_lenght=0)
+    #artists = tsne.filter_by_songlist_lenght(artists=artists, max_artists_num=20, min_lenght=0)
     X, y = tsne.prepare_dataset(artists)
     X = tsne.tsne(X,n_comp=2)
     artists = optimize_artists_dictionary(artists)
@@ -201,15 +178,15 @@ def main():
     dim = 20
     artists = gen_heatmaps(artists=artists,dimension=dim, min=-85, max=85)
     plot_heatmaps(artists=artists,dimension=dim,min=-85, max=85)
-    distance_dict,distance_mat = compute_distances(artists=artists,dimension=dim,metric='minkowski_2')
-    distance_mat = np.array(distance_mat)
 
-    distance_dict, distance_mat = compute_distances(artists=artists, dimension=dim, metric='soergel_7')
-    distance_mat = np.array(distance_mat)
+    metrics = ['minkowski_2','soergel_7','not_intersection_11']#,'kullback-leibler_37']
+    distance_dict = dict()
+    distance_mat = dict()
 
-    distance_dict, distance_mat = compute_distances(artists=artists, dimension=dim, metric='not_intersection_11')
-    distance_mat = np.array(distance_mat)
+    for metric in metrics:
+        distance_dict[metric], distance_mat[metric] = compute_distances(artists=artists,dimension=dim,metric=metric)
+        distance_mat[metric] = np.array(distance_mat)
 
     return distance_dict, distance_mat
 if __name__ == '__main__':
-    main()
+    distance_dict, distance_mat = main()
