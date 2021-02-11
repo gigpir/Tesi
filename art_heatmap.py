@@ -125,6 +125,24 @@ def plot_heatmaps(artists,dimension, min, max):
         plt.close('all')
 
 def compute_heatmap_distance(h1,h2,dimension,metric):
+    """
+        Parameters
+        ----------
+        h1 : 2d array
+            The name of the animal
+        h2 : 2d array
+            The sound the animal makes
+        dimension : int
+            array dimension
+        metric : str
+            [minkowski_2, soergel_7, not_intersection_11, kullback-leibler_37]
+            see http://www.fisica.edu.uy/~cris/teaching/Cha_pdf_distances_2007.pdf for info
+
+        Output
+        ---------
+        total_d : float
+            the greater total_d is the farther h1 and h2 are
+        """
     total_d = 0
     total_div = 0
     for i in range(dimension):
@@ -151,6 +169,24 @@ def compute_heatmap_distance(h1,h2,dimension,metric):
     return total_d
 
 def compute_distances(artists, dimension = 20 ,metric='minkowski_2'):
+    """
+            Parameters
+            ----------
+            artists : dict of Artist object
+
+            dimension : int
+                desired dimension for heatmap {default = 20}
+            metric : str
+                [minkowski_2, soergel_7, not_intersection_11, kullback-leibler_37]
+                see http://www.fisica.edu.uy/~cris/teaching/Cha_pdf_distances_2007.pdf for info
+
+            Output
+            ---------
+            distance_dict : dict(artist_i_id, dict(artist_j_id, distance)
+
+            distance_mat : list
+                each row contains [Artist1_id,Artist2_id,distance]
+    """
     distance_dict=dict()
     distance_mat=[]
     print('Computing distances between heatmaps using ',metric, ' metric...')
