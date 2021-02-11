@@ -32,6 +32,7 @@ class Song:
         self.sections_confidence = None
         self.tatums_start = None
         self.tatums_confidence = None
+        self.tsne = None
     def __str__(self):
         return str(self.name)
 class Artist:
@@ -44,6 +45,7 @@ class Artist:
         self.similar_artists = [] #Ground truth?
         self.song_list = []
         self.has_N_similar_artists = True
+        self.tsne_heatmap = None
     def has_zero_terms(self):
         return len(self.terms) == 0
     def get_terms_num(self):

@@ -2,7 +2,8 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import PowerTransformer
-
+from random import choice
+import colorsys
 def decrease_vector_size(vect,final_size):
     # Decrease array size by averaging adjacent values with numpy
     final_vect = []
@@ -105,3 +106,26 @@ def robust_scaler(data):
     #Scale features using statistics that are robust to outliers
 
     return preprocessing.RobustScaler(quantile_range=[15,85]).fit_transform(data)
+
+
+def random_color_code():
+    hex_chars = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+    color_code = '#'
+    for i in range(0,6):
+        color_code += choice(hex_chars)
+    return color_code
+
+def generate_color_text_list(n_elements):
+    out = []
+    for i in range(n_elements):
+        out.append(random_color_code())
+    return out
+
+def gen_colors(N):
+
+    HSV_tuples = [(x * 1.0 / N, 0.67, 0.84) for x in range(N)]
+    hex_out = []
+    for rgb in HSV_tuples:
+        rgb = map(lambda x: int(x * 255), colorsys.hsv_to_rgb(*rgb))
+        hex_out.append('#%02x%02x%02x' % tuple(rgb))
+    return hex_out

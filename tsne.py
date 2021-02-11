@@ -5,7 +5,8 @@ import multiprocessing
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import pandas as pd
-from utility import resize_matrix, z_normalize, power_transform, normalize, quantile_transform, robust_scaler
+from utility import resize_matrix, z_normalize, power_transform, normalize, quantile_transform, robust_scaler, \
+    generate_color_text_list, gen_colors
 from ellipses_plot_wrapper import confidence_ellipse
 from sklearn.svm import SVC
 from sklearn.model_selection import StratifiedKFold
@@ -46,7 +47,7 @@ def tsne_plot_centroids(centroids,filename='tsne_centroids'):
     fname = './plots/'+filename+'.png'
     plt.savefig(fname, dpi=600)
 
-def tsne_plot_elliptical(X,y,artists,filename='tsne_centroids',note='with outliers'):
+def tsne_plot_elliptical(X,y,artists,colors,filename='tsne_centroids',note='with outliers'):
     fig, ax_nstd = plt.subplots(figsize=(6, 6))
 
     out = []  # [<A.ID><A.C1><A.C2><v11><v22><v12>]
@@ -56,8 +57,9 @@ def tsne_plot_elliptical(X,y,artists,filename='tsne_centroids',note='with outlie
     # aggregate horizontally X and y to filter
     X_y = np.hstack((X, y))
 
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-
+    #colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+    #colors = generate_color_text_list(len(artist_ids))
+    #colors = gen_colors(len(artist_ids))
     for i, id in enumerate(artist_ids):
         # filter only coordinates related to that id
         filtered_x = X_y[np.where(X_y[:, 2] == id)][:, :2].astype(np.float)
@@ -163,8 +165,8 @@ def prepare_dataset(artists,remove_outliers=False,):
             feat_row = np.append(feat_row, [s.tempo, s.loudness])
 
             # append min, max, variance of each coloumn
-            feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, min_max_var=True))
-            feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, min_max_var=True))
+            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, min_max_var=True))
+            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, min_max_var=True))
             # append first  derivative
             #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
             #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
@@ -183,13 +185,14 @@ def prepare_dataset(artists,remove_outliers=False,):
                 lab_row.append('NULL')
             y.append(lab_row)
         pbar.update()
+    pbar.close()
     #X = feature_selection(np.array(X).astype(np.float),np.array(y)[:,0])
+    if remove_outliers:
+        X ,y = remove_outliers_lof(X,y)
     #X = z_normalize(X)
     #X = power_transform(X)
     #X = quantile_transform(X)
     X = robust_scaler(X)
-    if remove_outliers:
-        X ,y = remove_outliers_lof(X,y)
 
     return X, y
 
@@ -211,11 +214,26 @@ def filter_by_songlist_lenght(artists, max_artists_num=100, min_lenght = 10):
     new_artists = dict()
     sortedBySongNumber = sorted(artists.values(), reverse=True, key=lambda x: len(x.song_list))
 
-    for i in range(max_artists_num):
+
+    for i in range(int(max_artists_num/2)):
         if len(sortedBySongNumber[i].song_list) >= min_lenght:
             new_artists[sortedBySongNumber[i].id] = sortedBySongNumber[i]
         else:
             break;
+    offset = int(max_artists_num/2)
+    left = max_artists_num - offset
+    #add an equal number of artist based on artist similarity
+    while left > 0:
+        n_occ = 0
+        for a in new_artists.values():
+            if sortedBySongNumber[offset].id in a.similar_artists:
+                n_occ += 1
+        if n_occ > 1:
+            new_artists[sortedBySongNumber[offset].id] = sortedBySongNumber[offset]
+            left -= 1
+        offset += 1
+        if offset >= len(sortedBySongNumber):
+            left = 0
     return new_artists
 
 def get_centroids(X,y):
@@ -313,7 +331,7 @@ def remove_outliers_lof(data, y):
         y = filtered[:, -3:]
         X = np.delete(filtered,np.s_[-3:],axis=1).astype(np.float)
 
-        clf = LocalOutlierFactor(n_neighbors=10)
+        clf = LocalOutlierFactor(algorithm='auto',metric='euclidean',n_neighbors=10)
         pr = clf.fit_predict(X)
         for i, p in enumerate(pr):
             #if p == -1 we have an outlier
@@ -329,7 +347,7 @@ def remove_outliers_lof(data, y):
     X = np.array(X).astype(np.float)
     y = np.array(y)
     #print("Outlier remotion: (%d - %d)= %d " % (X_y.shape[0], X_y.shape[0]-X.shape[0], X.shape[0]))
-    print("Before Outlier remotion: ", data.shape)
+    print("Before Outlier remotion: ", X_y.shape)
     print("Before Outlier remotion: ", X.shape)
 
     return X,y
@@ -386,7 +404,7 @@ def feature_selection(X,y):
     svc = SVC(kernel="linear")
     # The "accuracy" scoring is proportional to the number of correct
     # classifications
-    min_features_to_select = 40  # Minimum number of features to consider
+    min_features_to_select = 4  # Minimum number of features to consider
     rfecv = RFECV(estimator=svc, step=1, cv=StratifiedKFold(2),
                   scoring='accuracy',
                   min_features_to_select=min_features_to_select,
@@ -407,20 +425,24 @@ def feature_selection(X,y):
 
     return X_new
 
+
+
 def main():
 
     artists = load_data(filename='full_msd_top20000.pkl')
-    artists = filter_by_songlist_lenght(artists=artists, max_artists_num=10, min_lenght=0)
+    artists = filter_by_songlist_lenght(artists=artists, max_artists_num=20, min_lenght=0)
+
+    colors = gen_colors(len(artists))
 
     X, y = prepare_dataset(artists)
     X_tsne = tsne(X,n_comp=2)
-    tsne_plot_elliptical(X_tsne,y,artists,filename='centroids_',note='with outliers')
+    tsne_plot_elliptical(X=X_tsne,y=y,artists=artists,colors=colors,filename='centroids_',note='with outliers')
 
     compare_centroids_and_similar_artists(X_tsne, y, artists)
 
     X, y = prepare_dataset(artists,remove_outliers=True)
     X_tsne = tsne(X, n_comp=2)
-    tsne_plot_elliptical(X_tsne, y, artists, filename='centroids_',note='without outliers')
+    tsne_plot_elliptical(X=X_tsne,y=y,artists=artists,colors=colors,filename='centroids_',note='without outliers')
     compare_centroids_and_similar_artists(X_tsne, y, artists)
 
 
