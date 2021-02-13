@@ -4,7 +4,8 @@ from data_io import load_data
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-
+import csv
+import pandas as pd
 def heatmap(data, row_labels, col_labels, ax=None,
             cbar_kw={}, cbarlabel="", **kwargs):
     """
@@ -68,13 +69,20 @@ def heatmap(data, row_labels, col_labels, ax=None,
 
 
 def optimize_artists_dictionary(artists):
-    #convert each song list to a dictionary of songs
+
+    """
+        convert each song list to a dictionary of songs
+        this is useful for speeding the search later
+    """
+
     for a in artists.values():
         a.song_list = {a.song_list[i].id: a.song_list[i] for i in range(0, len(a.song_list))}
     return artists
 
 def attach_tsne_to_art_dict(artists, X,y):
-
+    """
+        each song of each Artist will have its tsne coordinates associated
+    """
     print("Attaching tsne coordinates to artist dictionary")
     pbar = tqdm(total=len(y))
     for i, row_label in enumerate(y):
@@ -84,9 +92,12 @@ def attach_tsne_to_art_dict(artists, X,y):
     return artists
 
 def gen_heatmaps(artists, dimension, max, min):
-    #given the dictionary of artists
-    #retrive a tsne heatmap for each one of them
-    # return the modified dictionary
+    """
+        given the dictionary of artists
+        retrive a tsne heatmap for each one of them
+        return the modified dictionary
+    """
+
     print('Generating artist heatmaps')
     pbar = tqdm(total=len(artists))
     for a in artists.values():
@@ -209,6 +220,8 @@ def main():
     #artists = tsne.filter_by_songlist_lenght(artists=artists, max_artists_num=20, min_lenght=0)
     X, y = tsne.prepare_dataset(artists)
     X = tsne.tsne(X,n_comp=2)
+
+
     artists = optimize_artists_dictionary(artists)
     artists = attach_tsne_to_art_dict(artists=artists, X=X, y=y)
     dim = 20
@@ -221,7 +234,10 @@ def main():
 
     for metric in metrics:
         distance_dict[metric], distance_mat[metric] = compute_distances(artists=artists,dimension=dim,metric=metric)
-        distance_mat[metric] = np.array(distance_mat)
+        #distance_mat[metric] = np.array(distance_mat)
+        filename = './Heatmaps/distance_'+metric+'.csv'
+        pd.DataFrame(distance_mat[metric]).to_csv(filename)
+
 
     return distance_dict, distance_mat
 if __name__ == '__main__':

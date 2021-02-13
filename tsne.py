@@ -144,12 +144,205 @@ def mean_n_rows(artists):
                 min = s.segments_timbre.shape[0]
     return mean
 
+def get_features_dict():
+    output = {0: 'mfcc_mean_0',
+              1: 'mfcc_mean_1',
+              2: 'mfcc_mean_2',
+              3: 'mfcc_mean_3',
+              4: 'mfcc_mean_4',
+              5: 'mfcc_mean_5',
+              6: 'mfcc_mean_6',
+              7: 'mfcc_mean_7',
+              8: 'mfcc_mean_8',
+              9: 'mfcc_mean_9',
+              10: 'mfcc_mean_10',
+              11: 'mfcc_mean_11',
+              12: 'pitch_mean_0',
+              13: 'pitch_mean_1',
+              14: 'pitch_mean_2',
+              15: 'pitch_mean_3',
+              16: 'pitch_mean_4',
+              17: 'pitch_mean_5',
+              18: 'pitch_mean_6',
+              19: 'pitch_mean_7',
+              20: 'pitch_mean_8',
+              21: 'pitch_mean_9',
+              22: 'pitch_mean_10',
+              23: 'pitch_mean_11',
 
-def prepare_dataset(artists,remove_outliers=False,):
+              24: 'loudness',
+              25: 'tempo',
 
-    #normalize dimensions of mfcc matrix by decreasing or increasing feature space
-    # normalize dimensions of pitches matrix by decreasing or increasing feature space
-    #retrive the mean value of rows of each mfcc matrix, the number of cols is constant (12)
+              26: 'mfcc_min_0',
+              27: 'mfcc_max_0',
+              28: 'mfcc_var_0',
+              29: 'mfcc_min_1',
+              30: 'mfcc_max_1',
+              31: 'mfcc_var_1',
+              32: 'mfcc_min_2',
+              33: 'mfcc_max_2',
+              34: 'mfcc_var_2',
+              35: 'mfcc_min_3',
+              36: 'mfcc_max_3',
+              37: 'mfcc_var_3',
+              38: 'mfcc_min_4',
+              39: 'mfcc_max_4',
+              40: 'mfcc_var_4',
+              41: 'mfcc_min_5',
+              42: 'mfcc_max_5',
+              43: 'mfcc_var_5',
+              44: 'mfcc_min_6',
+              45: 'mfcc_max_6',
+              46: 'mfcc_var_6',
+              47: 'mfcc_min_7',
+              48: 'mfcc_max_7',
+              49: 'mfcc_var_7',
+              50: 'mfcc_min_8',
+              51: 'mfcc_max_8',
+              52: 'mfcc_var_8',
+              53: 'mfcc_min_9',
+              54: 'mfcc_max_9',
+              55: 'mfcc_var_9',
+              56: 'mfcc_min_10',
+              57: 'mfcc_max_10',
+              58: 'mfcc_var_10',
+              59: 'mfcc_min_11',
+              60: 'mfcc_max_11',
+              61: 'mfcc_var_11',
+
+              62: 'pitch_min_0',
+              63: 'pitch_max_0',
+              64: 'pitch_var_0',
+              65: 'pitch_min_1',
+              66: 'pitch_max_1',
+              67: 'pitch_var_1',
+              68: 'pitch_min_2',
+              69: 'pitch_max_2',
+              70: 'pitch_var_2',
+              71: 'pitch_min_3',
+              72: 'pitch_max_3',
+              73: 'pitch_var_3',
+              74: 'pitch_min_4',
+              75: 'pitch_max_4',
+              76: 'pitch_var_4',
+              77: 'pitch_min_5',
+              78: 'pitch_max_5',
+              79: 'pitch_var_5',
+              80: 'pitch_min_6',
+              81: 'pitch_max_6',
+              82: 'pitch_var_6',
+              83: 'pitch_min_7',
+              84: 'pitch_max_7',
+              85: 'pitch_var_7',
+              86: 'pitch_min_8',
+              87: 'pitch_max_8',
+              88: 'pitch_var_8',
+              89: 'pitch_min_9',
+              90: 'pitch_max_9',
+              91: 'pitch_var_9',
+              92: 'pitch_min_10',
+              93: 'pitch_max_10',
+              94: 'pitch_var_10',
+              95: 'pitch_min_11',
+              96: 'pitch_max_11',
+              97: 'pitch_var_11',
+
+              98: 'mfcc_1st_0',
+              99: 'mfcc_1st_1',
+              100: 'mfcc_1st_2',
+              101: 'mfcc_1st_3',
+              102: 'mfcc_1st_4',
+              103: 'mfcc_1st_5',
+              104: 'mfcc_1st_6',
+              105: 'mfcc_1st_7',
+              106: 'mfcc_1st_8',
+              107: 'mfcc_1st_9',
+              108: 'mfcc_1st_10',
+              109: 'mfcc_1st_11',
+              110: 'pitch_1st_0',
+              111: 'pitch_1st_1',
+              112: 'pitch_1st_2',
+              113: 'pitch_1st_3',
+              114: 'pitch_1st_4',
+              115: 'pitch_1st_5',
+              116: 'pitch_1st_6',
+              117: 'pitch_1st_7',
+              118: 'pitch_1st_8',
+              119: 'pitch_1st_9',
+              120: 'pitch_1st_10',
+              121: 'pitch_1st_11',
+
+              122: 'mfcc_2nd_0',
+              123: 'mfcc_2nd_1',
+              124: 'mfcc_2nd_2',
+              125: 'mfcc_2nd_3',
+              126: 'mfcc_2nd_4',
+              127: 'mfcc_2nd_5',
+              128: 'mfcc_2nd_6',
+              129: 'mfcc_2nd_7',
+              130: 'mfcc_2nd_8',
+              131: 'mfcc_2nd_9',
+              132: 'mfcc_2nd_10',
+              133: 'mfcc_2nd_11',
+              134: 'pitch_2nd_0',
+              135: 'pitch_2nd_1',
+              136: 'pitch_2nd_2',
+              137: 'pitch_2nd_3',
+              138: 'pitch_2nd_4',
+              139: 'pitch_2nd_5',
+              140: 'pitch_2nd_6',
+              141: 'pitch_2nd_7',
+              142: 'pitch_2nd_8',
+              143: 'pitch_2nd_9',
+              144: 'pitch_2nd_10',
+              145: 'pitch_2nd_11',
+              }
+    return output
+
+def prepare_dataset(artists,remove_outliers=False, mode=0):
+
+    """
+            Extract information from data and build a dataset of the type X, y
+            The features are standartized
+
+            Parameters
+            ----------
+            artists : dict(Artist_id, Artist_obj)
+
+            remove_outliers : Bool
+                Perform outlier remotion or not {default = False}
+            mode : int
+                select what information to include in X {default = 0}
+
+                0 : mfcc mean values (12), picht mean values (12),
+
+                1 : mfcc mean values (12), pitch mean values (12)
+                    mfcc min values (12), pitch min values (12),
+                    mfcc max values (12), pitch max values (12),
+                    mfcc var values (12), pitch var values (12),
+                    s.tempo, s.loudness
+
+                2 : mfcc mean values (12), pitch mean values (12)
+                    mfcc min values (12), pitch min values (12),
+                    mfcc max values (12), pitch max values (12),
+                    mfcc var values (12), pitch var values (12),
+                    mfcc 1st_grad values (12), pitch 1st_grad values (12),
+                    s.tempo, s.loudness
+
+                3 : mfcc mean values (12), pitch mean values (12)
+                    mfcc min values (12), pitch min values (12),
+                    mfcc max values (12), pitch max values (12),
+                    mfcc var values (12), pitch var values (12),
+                    mfcc 1st_grad values (12), pitch 1st_grad values (12),
+                    mfcc 1nd_grad values (12), pitch 2nd_grad values (12),
+                    s.tempo, s.loudness
+
+            Output
+            ---------
+            X , y
+
+    """
+
 
     rows = 1 #mean_n_rows(artists)
     pbar = tqdm(total=len(artists))
@@ -161,18 +354,22 @@ def prepare_dataset(artists,remove_outliers=False,):
         for s in a.song_list:
             mfcc_mat = s.segments_timbre
             pitch_mat = s.segments_pitches
-            feat_row = np.append(resize_matrix(mfcc_mat, rows), resize_matrix(pitch_mat, rows))
-            feat_row = np.append(feat_row, [s.tempo, s.loudness])
 
-            # append min, max, variance of each coloumn
-            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, min_max_var=True))
-            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, min_max_var=True))
-            # append first  derivative
-            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
-            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
-            # append second derivative
-            #feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
-            #feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
+            if mode >= 0:
+                feat_row = np.append(resize_matrix(mfcc_mat, rows), resize_matrix(pitch_mat, rows))
+                feat_row = np.append(feat_row, [s.tempo, s.loudness])
+            if mode >= 1:
+                # append min, max, variance of each coloumn
+                feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, min_max_var=True))
+                feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, min_max_var=True))
+            if mode >= 2:
+                # append first  derivative
+                feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=1))
+                feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=1))
+            if mode >= 3:
+                #append second derivative
+                feat_row = np.append(feat_row, resize_matrix(mfcc_mat, rows, gradient=2))
+                feat_row = np.append(feat_row, resize_matrix(pitch_mat, rows, gradient=2))
 
 
             X.append(feat_row)
