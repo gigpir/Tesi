@@ -1,11 +1,12 @@
 import tsne
 from tqdm import tqdm
-from data_io import load_data
+from data_io import load_data, save_data
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import csv
 import pandas as pd
+import rbo
 def heatmap(data, row_labels, col_labels, ax=None,
             cbar_kw={}, cbarlabel="", **kwargs):
     """
@@ -214,21 +215,147 @@ def compute_distances(artists, dimension = 20 ,metric='minkowski_2'):
 
     return distance_dict,distance_mat
 
+def compute_ranking(artists, distance_mat, top_k):
+    """
+    Compute ranking for each artist
+                Parameters
+                ----------
+                artists : dict of Artist object
+
+                distance_mat : list
+                    each row contains [Artist1_id,Artist2_id,distance]
+
+                top_k : int
+                    lenght of ranked list
+                Output
+                ---------
+                artist dictionary
+        """
+    for a in artists.values():
+        ranked_list = []
+
+        # isolate only the similarity points that belong to artist a
+        slice = [row for row in distance_mat if (row[0] == a.id or row[1] == a.id)]
+
+        # sort by increasing distance
+        slice.sort(key=lambda row: row[2], reverse=False)
+
+        # take only first TOP_N results
+        slice = slice[:top_k]
+
+        for s in slice:
+            if s[0] != a.id:
+                ranked_list.append(s[0])
+
+            if s[1] != a.id:
+                ranked_list.append(s[1])
+
+        a.my_similar_artists = ranked_list
+
+    return artists
+
+def compute_ranking_score(artists, **kwargs):
+    """
+        Give a score to a ranking algorithm
+                    Parameters
+                    ----------
+                    artists : dict of Artist object
+
+                    **kwargs : list
+                        e.g. metric = 'minkowsky'
+                    Output
+                    ---------
+                    score : float
+    """
+    scores = []
+    print('Computing ranking score my rank and ground truth...')
+    for a in artists.values():
+        if len(a.similar_artists) > 0:
+            scores.append(rbo.RankingSimilarity(a.similar_artists, a.my_similar_artists).rbo())
+
+    scores = np.array(scores)
+
+    if len(kwargs) != 0:
+        for key, val in kwargs.items():
+            print('The Average score (RBO) for the metric ', val, ' is ', np.mean(scores))
+
+def clean_similar_artists(artists):
+    """
+        Remove artists that are not present in the current
+        selection
+            Parameters
+            ----------
+            Output
+            --------
+            artists : dict of Artist object
+    """
+    zero_lenght_ranks = 0
+    lenghts_array = []
+    for a in artists.values():
+        new_list = []
+        for sim_a in a.similar_artists:
+            if sim_a in artists:
+                new_list.append(sim_a)
+        a.similar_artists = new_list
+
+        #just for statistical purposes
+        if len(new_list) == 0:
+            zero_lenght_ranks += 1
+        else:
+            lenghts_array.append(len(new_list))
+
+    lenghts_array = np.array(lenghts_array)
+    mean_lenght = np.mean(lenghts_array)
+
+    print('Cleaning phase completed:')
+    print(zero_lenght_ranks ,' artists have zero similar artists in their ground truth')
+    print('Mean lenght of ranking array is (zero rank were not considered) ', mean_lenght)
+
+    return artists
+
+def check_if_ranked_list_are_equal(distance_mat):
+
+    for mat in distance_mat.values():
+        mat.sort(key=lambda row: row[2], reverse=False)
+
+    mats = list(distance_mat.values())
+
+    for i in range(len(mats[0])):
+        if mats[0][i][0] != mats[1][i][0]:
+            return False
+        if mats[0][i][1] != mats[1][i][1]:
+            return False
+        if mats[0][i][0] != mats[2][i][0]:
+            return False
+        if mats[0][i][1] != mats[2][i][1]:
+            return False
+    return True
 
 def main():
-    artists = load_data(filename='full_msd_top20000.pkl')
-    #artists = tsne.filter_by_songlist_lenght(artists=artists, max_artists_num=20, min_lenght=0)
-    X, y = tsne.prepare_dataset(artists)
-    X = tsne.tsne(X,n_comp=2)
-
-
-    artists = optimize_artists_dictionary(artists)
-    artists = attach_tsne_to_art_dict(artists=artists, X=X, y=y)
     dim = 20
-    artists = gen_heatmaps(artists=artists,dimension=dim, min=-85, max=85)
-    plot_heatmaps(artists=artists,dimension=dim,min=-85, max=85)
+    tmp = True
+    metrics = ['minkowski_2', 'soergel_7', 'not_intersection_11']  # ,'kullback-leibler_37']
+    if not tmp:
+        artists = load_data(filename='full_msd_top20000.pkl')
+        #artists = tsne.filter_by_songlist_lenght(artists=artists, max_artists_num=20, min_lenght=0)
+        X, y = tsne.prepare_dataset(artists)
+        X = tsne.tsne(X,n_comp=2)
 
-    metrics = ['minkowski_2','soergel_7','not_intersection_11']#,'kullback-leibler_37']
+
+        artists = optimize_artists_dictionary(artists)
+        artists = attach_tsne_to_art_dict(artists=artists, X=X, y=y)
+
+        artists = gen_heatmaps(artists=artists,dimension=dim, min=-85, max=85)
+        plot_heatmaps(artists=artists,dimension=dim,min=-85, max=85)
+
+
+
+        artists = clean_similar_artists(artists=artists)
+
+        save_data(artists, filename='tmp.pkl')
+    else:
+        artists = load_data(filename='tmp.pkl')
+
     distance_dict = dict()
     distance_mat = dict()
 
@@ -238,7 +365,15 @@ def main():
         filename = './Heatmaps/distance_'+metric+'.csv'
         pd.DataFrame(distance_mat[metric]).to_csv(filename)
 
+        artists = compute_ranking(artists=artists,distance_mat=distance_mat[metric], top_k=20)
+        compute_ranking_score(artists=artists,metric=metric)
+
 
     return distance_dict, distance_mat
 if __name__ == '__main__':
     distance_dict, distance_mat = main()
+
+    if check_if_ranked_list_are_equal(distance_mat=distance_mat):
+        print("OK, equal")
+    else:
+        print("NOT equal")

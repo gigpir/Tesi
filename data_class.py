@@ -46,6 +46,7 @@ class Artist:
         self.song_list = []
         self.has_N_similar_artists = True
         self.tsne_heatmap = None
+        self.my_similar_artists = None
     def has_zero_terms(self):
         return len(self.terms) == 0
     def get_terms_num(self):
